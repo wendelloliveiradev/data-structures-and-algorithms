@@ -6,6 +6,7 @@
 
 using namespace std;
 
+//Function Prototypes
 void getInputStr(vector<string> &str_matrix);
 void countDiamonds(vector<string> &str_matrix, vector<int> &output, int& N);
 void printNumDiamonds(vector<int> &output);
@@ -37,22 +38,23 @@ void getInputStr(vector<string> &str_matrix) {
 
 void countDiamonds(vector<string> &str_matrix, vector<int> &output, int& N) {
     for (int i = 0; i < N; i++) {
-        int les = 0, ges = 0, j = 0;
+        // lts = less than sign, gts = greater than sign 
+        int lts = 0, gts = 0, j = 0;
 
         while (str_matrix[i][j] != '\0') {
             if  (str_matrix[i][j] == '<')
-                les++;
+                lts++;
             else if (str_matrix[i][j] == '>') {
-                if (les > 0) {
-                    les--;
-                    ges++;
+                if (lts > 0) {
+                    lts--;
+                    gts++;
                 }
             }
 
             j++;
         }
 
-        output.push_back(ges);
+        output.push_back(gts);
     }
 }
 
