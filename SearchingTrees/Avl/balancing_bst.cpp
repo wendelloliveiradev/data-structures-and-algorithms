@@ -61,10 +61,10 @@ int main() {
             flagSide = false;    //Caso 'flagSide' for = true, coloca os elementos na SAE, SAD caso contrario
 
         char *aux = new char[10000];    //Setando uma string auxiliar com os numeros de cada elemento para converter para inteiro
-        if (str[i] == 40 and str[i + 1] == 67) {
+        if (str[i] == 40 && str[i + 1] == 67) {
             int j = i + 2;
             int k = 0;
-            while (str[j] != 40 and str[j] != 41) {
+            while (str[j] != 40 && str[j] != 41) {
                 aux[k] = str[j];
                 j++;
                 k++;
@@ -266,7 +266,7 @@ bool ArvoreAVL (tipoNo *noRef) {
 
     BALANCA = FB(noRef);
 
-    if (noRef->esq == NULL and noRef->dir == NULL)
+    if (noRef->esq == NULL && noRef->dir == NULL)
         return true;
     if (BALANCA <= 1)
         return true;

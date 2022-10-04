@@ -15,6 +15,8 @@
         "stacktrace": "cpp",
         "regex": "cpp",
         "valarray": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "random": "cpp",
+        "utility": "cpp"
     }
 }
