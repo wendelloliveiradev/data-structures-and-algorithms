@@ -2,160 +2,135 @@
 
 using namespace std;
 
-//Protótipos das Funções
-void quickSort(struct Pessoa* pessoas, int inicio, int fim);
-int particao(struct Pessoa* pessoas, int inicio, int fim);
-void swap(struct Pessoa* pessoas, int i, int j);
-int verificaEstavel(struct Pessoa* pessoas, string str1, string str2, int N);
+//Function Prototypes
+void quickSort(struct Person* people, int start, int end);
+int partition(struct Person* people, int start, int end);
+void swap(struct Person* people, int i, int j);
+int verifyStability(struct Person* people, string str1, string str2, int N);
 
-//Estrutura utilizada para salvar as info de cada indivíduo
-struct Pessoa
-{
-	string nome;
-	int idade;
+struct Person {
+	string name;
+	int age;
 };
 
 int main() {
-	Pessoa* pessoas = new Pessoa[105000];
-	Pessoa* ajuda = new Pessoa[105000];
-	int N, M, P, cont, flag = 0;
-
+	Person* people = new Person[105000];
+	Person* aux_people = new Person[105000];
+	int N, M, P, i, is_stable = 0;
+	
 	cin >> N;
 
-	for (cont = 0; cont < N; cont++) {  //Recebe as Entradas
-		cin >> pessoas[cont].nome;
-		cin >> pessoas[cont].idade; 
+	for (i = 0; i < N; i++) {
+		cin >> people[i].name;
+		cin >> people[i].age; 
 
-		ajuda[cont].idade = pessoas[cont].idade;
-		ajuda[cont].nome = pessoas[cont].nome;
+		aux_people[i] = people[i];
 	}
 
 	cin >> P >> M;
 
-	quickSort(pessoas, 0, N - 1);   //Chamada da ordenação pelo método Quick-Sort
+	quickSort(people, 0, N - 1);
 
-	for (cont = 0; cont < N - 1; cont++) {
-		if (ajuda[cont].idade == ajuda[cont + 1].idade) {
-			flag += verificaEstavel(pessoas, ajuda[cont].nome, ajuda[cont + 1].nome, N);
-		}
-	}
+	for (i = 0; i < N - 1; i++)
+		if (aux_people[i].age == aux_people[i + 1].age)
+			is_stable += verifyStability(people, aux_people[i].name, aux_people[i + 1].name, N);
 
-	if (flag == 0) {
+	if (is_stable == 0)
 		cout << "yes" << "\n";
-	}
 	else
-	{
 		cout << "no" << "\n";
+
+	for (i = P - 1; i < M + P - 1; i++) {
+		cout << people[i].name << " ";
+		cout << people[i].age << "\n";
 	}
 
-	for (cont = P - 1; cont < M + P - 1; cont++) {
-		cout << pessoas[cont].nome << " ";
-		cout << pessoas[cont].idade << "\n";
-	}
-
-	delete[] pessoas;
+	delete[] people;
+	delete[] aux_people;
 	return 0;
 }
 
-void quickSort(struct Pessoa* pessoas, int inicio, int fim) {  //Quick-Sort recebe o vetor de estrutura com os dados, o indice do inicio e do fim.
-	int pivo;
-	if (inicio < fim) {
-		pivo = particao(pessoas, inicio, fim);  //Pivo é aproximadamente o elemento médio que serve como referência para os demais.
-		quickSort(pessoas, inicio, pivo - 1);   //Chamada recursiva um.
-		quickSort(pessoas, pivo + 1, fim);      //Chamada recursiva dois.
+void quickSort(struct Person* people, int start, int end) {
+	//pivot is about the middle element in the people struct
+	int pivot;
+
+	if (start < end) {
+		pivot = partition(people, start, end);
+		quickSort(people, start, pivot - 1);
+		quickSort(people, pivot + 1, end);
 	}
 
 	return;
 }
 
-int particao(struct Pessoa* pessoas, int inicio, int fim) {
+int partition(struct Person* people, int start, int end) {
+	//Defines which is the pivot, and sort the element
+	//smaller than pivot to the left
+	//bigger than pivot to the right
 
-	//Define qual é o Pivo e ordena os elementos menores iguais do que o pivo a esquerda e os maiores a direita
+	int a, b, c, i, middle, three_median = 0, pivot;
 
-	int a, b, c, i, meio, medianadeTres = 0, cont, pivo;
+	middle = (start + end) / 2;
 
-	meio = (inicio + fim) / 2;
+	a = people[start].age;
+	b = people[middle].age;
+	c = people[end].age;
 
-	a = pessoas[inicio].idade;
-	b = pessoas[meio].idade;
-	c = pessoas[fim].idade;
-
-
-	if (a < b)
-	{
+	if (a < b) {
 		if (b < c)
-		{
-			medianadeTres = meio;
-		}
-		else
-		{
+			three_median = middle;
+		else {
 			if (a < c)
-			{
-				medianadeTres = fim;
-			}
+				three_median = end;
 			else
-			{
-				medianadeTres = inicio;
-			}
+				three_median = start;
 		}
 	}
-	else
-	{
+	else {
 		if (c < b)
-		{
-			medianadeTres = meio;
-		}
-		else
-		{
+			three_median = middle;
+		else {
 			if (c < a)
-			{
-				medianadeTres = fim;
-			}
+				three_median = end;
 			else
-			{
-				medianadeTres = inicio;
-			}
+				three_median = start;
 		}
 	}
 
-	swap(pessoas, medianadeTres, fim);
+	swap(people, three_median, end);
 
-	pivo = pessoas[fim].idade;
-	i = inicio - 1;
-	for (cont = inicio; cont <= fim - 1; cont++) {
-		if (pessoas[cont].idade <= pivo) {
+	pivot = people[end].age;
+	i = start - 1;
+	
+	for (int j = start; j < end; j++)
+		if (people[j].age <= pivot) {
 			i = i + 1;
-			swap(pessoas, i, cont);
+			swap(people, i, j);
 		}
-	}
 
-	swap(pessoas, i + 1, fim);
+	swap(people, i + 1, end);
 
 	return (i + 1);
 }
 
-void swap(struct Pessoa* pessoas, int i, int j) {
-	Pessoa aux;
+void swap(struct Person* people, int i, int j) {
+	Person aux;
 
-	aux.idade = pessoas[i].idade;
-	aux.nome = pessoas[i].nome;
-	pessoas[i].idade = pessoas[j].idade;
-	pessoas[i].nome = pessoas[j].nome;
-	pessoas[j].idade = aux.idade;
-	pessoas[j].nome = aux.nome;
-
-	return;
+	aux = people[i];
+	people[i] = people[j];
+	people[j] = aux;
 }
 
-int verificaEstavel(struct Pessoa* pessoas, string str1, string str2, int N) {
-	int cont, flag = 0;
+int verifyStability(struct Person* people, string str1, string str2, int N) {
+	int i, is_stable = 0;
 
-	for (cont = 0; cont < N - 1; cont++) {
-		if (pessoas[cont].nome == str1 && flag == 0) {
+	for (i = 0; i < N - 1; i++) {
+		if (people[i].name == str1 && is_stable == 0) 
 			return 0;
-		}
-		if (pessoas[cont].nome == str2)
-			flag++;
+
+		if (people[i].name == str2)
+			is_stable++;
 	}
+
 	return 1;
 }

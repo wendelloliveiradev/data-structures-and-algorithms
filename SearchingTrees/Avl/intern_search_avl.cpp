@@ -188,12 +188,12 @@ void remover_AVL (tipoNo *&noRef) {
     if (noRef == NULL)
         return;
 
-    if (noRef->esq == NULL and noRef->dir == NULL) {
+    if (noRef->esq == NULL && noRef->dir == NULL) {
         noRef = noRef->esq;
         delete noRef;
         return;
     }
-    else if (noRef->esq != NULL and noRef->dir == NULL) {
+    else if (noRef->esq != NULL && noRef->dir == NULL) {
         buscar_Maior(noRef, noRef->esq);
         return;
     }
