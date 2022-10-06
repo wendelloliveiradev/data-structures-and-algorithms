@@ -5,62 +5,97 @@
 using namespace std;
 
 //Structs
-struct tipoNo {
-    int chave;
-    struct tipoNo *esq;
-    struct tipoNo *dir;
+struct Node {
+    int key;
+    struct Node *left;
+    struct Node *right;
 };
 
-struct tipoABB {
-    tipoNo *raiz;
+struct Bst {
+    Node *root;
 };
 
-//Protótipos das Funções
-void inicializar_ABB (tipoABB *arvore);
-tipoNo *criar_No (int elemento, tipoNo *esq, tipoNo *dir);
-void inserir_ABB (tipoNo *&noRef, int elemento);
-int altura_ABB (tipoNo *noRef);
-int FB (tipoNo *noRef);
-void BalancaNo (tipoNo *noRef);
-void LL (tipoNo *noRef);
-void LR (tipoNo *noRef);
-void RR (tipoNo *noRef);
-void RL (tipoNo *noRef);
-bool ArvoreAVL (tipoNo *noRef);
-void Imprimir(tipoNo *noRef);
+//Function Prototypes
+void initializeBst(Bst *tree);
+void countingParentheses(string &str, int &num_node_parent, int &num_element);
+void entriesTreatment(Bst *tree, string &str, int &num_node_parent);
+Node *createNode(int element, Node *left, Node *right);
+void insertBst(Node *&reference_node, int element);
+int heightBst(Node *reference_node);
+void balanceNode(Node *reference_node);
+int balancingFactor(Node *reference_node);
+void LL(Node *reference_node);
+void LR(Node *reference_node);
+void RR(Node *reference_node);
+void RL(Node *reference_node);
+bool avlTree(Node *reference_node);
+void printTreeRepresentation(Node *reference_node);
 
-string tipoRotacao;   //Variável para salvar o tipo da Rotacao aplicada
+//global variable to save the type of rotation
+//could easily be changed to local variable and
+//be passed over functions by reference
+string type_of_rotation;   
 
 int main() {
-    tipoABB *arvore = new tipoABB;  //alocação dinâmica da árvore
+    Bst *tree = new Bst;
     string str;
-    bool EhAVL, flagSide = true;
-    int ALT_ABB, numero = 0, numParent = -3, numElemento = -1;
+    bool is_avl;
+    int height_bst, num_node_parent = -3, num_element = -1;
 
+    initializeBst(tree);
 
-    inicializar_ABB(arvore);   //Inicializa a arvore
+    cin >> str;
 
-    cin >> str;     //Entrada principal pega a árvore aninhada em uma única STRING
+    countingParentheses(str, num_node_parent, num_element);
 
-    int i = 0;
-    while (i < str.size()) {   //Este loop auxilia na manutenção da ABB conforme a representação aninhada
+    entriesTreatment(tree, str, num_node_parent);
+
+    is_avl = avlTree(tree->root);
+
+    height_bst = heightBst(tree->root);
+
+    cout << height_bst << endl;
+
+    printTreeRepresentation(tree->root);
+    
+    cout << endl;
+
+    balanceNode(tree->root);
+
+    cout << endl;
+
+    delete tree;
+    return 0;
+}
+
+void initializeBst (Bst *tree) {
+    tree->root = NULL;
+}
+
+void countingParentheses(string &str, int &num_node_parent, int &num_element) {
+    for (int i = 0; i < str.size(); i++) {
         if (str[i] == 40 || str[i] == 41)
-            numParent++;
-        if (str[i] == 'C')
-            numElemento++;
+            num_node_parent++;
 
-        if (numParent == (numElemento * 4))
+        if (str[i] == 'C')
+            num_element++;
+
+        if (num_node_parent == (num_element * 4))
             break;
-        i++;
     }
+}
+
+void entriesTreatment(Bst *tree, string &str, int &num_node_parent) {
+    bool flag_side = true;
+    int number = 0;
 
     for (int i = 0; i < str.size(); ++i) {
-        if (str[i] == 40 || str[i] == 41)  //Quando o numero de parenteses for = 0, muda o lado da subarvore
-            numParent--;
-        if (numParent == 0)
-            flagSide = false;    //Caso 'flagSide' for = true, coloca os elementos na SAE, SAD caso contrario
+        if (str[i] == 40 || str[i] == 41)  //when the number of parentheses is equal to 0 change the subtree side
+            num_node_parent--;
+        if (num_node_parent == 0)
+            flag_side = false;    //case 'flag_side' is true, put the elements in the left subtree, put it in the right subtree other ways
 
-        char *aux = new char[10000];    //Setando uma string auxiliar com os numeros de cada elemento para converter para inteiro
+        char *aux = new char[10000];    //setting an auxiliar string with each element number
         if (str[i] == 40 && str[i + 1] == 67) {
             int j = i + 2;
             int k = 0;
@@ -70,216 +105,201 @@ int main() {
                 k++;
             }
             aux[k + 1] = '\0';
-            stringstream intValue(aux); //Conversão da string para inteiro
-            intValue >> numero;
+            stringstream intValue(aux); //converting string to integer
+            intValue >> number;
 
-            if (arvore->raiz == NULL)   //Adiciona o primeiro elemento da árvore
-                arvore->raiz = criar_No(numero, NULL, NULL);
+            if (tree->root == NULL)   //adds the first element to the tree
+                tree->root = createNode(number, NULL, NULL);
             else {
-                if (flagSide)
-                    inserir_ABB(arvore->raiz->esq, numero);
-                else
-                    inserir_ABB(arvore->raiz->dir, numero);
+                if (flag_side)                    
+                    insertBst(tree->root->left, number);
+                else                    
+                    insertBst(tree->root->right, number);
             }
         }
         delete[] aux;
     }
-
-    EhAVL = ArvoreAVL(arvore->raiz);
-
-    ALT_ABB = altura_ABB(arvore->raiz);     //retorna a altura da árvore a partir de um dado Nó
-
-    cout << ALT_ABB << endl;
-    Imprimir(arvore->raiz);
-    cout << endl;
-
-    BalancaNo(arvore->raiz);    //Faz o processo de rotação na Raiz e devolve o resultado
-
-    cout << endl;
-
-    delete arvore;
-    return 0;
 }
 
-void inicializar_ABB (tipoABB *arvore) {
-    arvore->raiz = NULL;
-}
+Node *createNode (int element, Node *left, Node *right) {
+    Node *aux = new Node;
 
-tipoNo *criar_No (int elemento, tipoNo *esq, tipoNo *dir) {
-    tipoNo *aux = new tipoNo;
-
-    aux->chave = elemento;
-    aux->esq = esq;
-    aux->dir = dir;
+    aux->key = element;
+    aux->left = left;
+    aux->right = right;
 
     return aux;
 }
 
-void inserir_ABB (tipoNo *&noRef, int elemento) {
+void insertBst(Node *&reference_node, int element) {
 
-    if (noRef == NULL) {
-        noRef = criar_No(elemento, NULL, NULL);
+    if (reference_node == NULL) {
+        reference_node = createNode(element, NULL, NULL);
         return;
     }
-    if (elemento < noRef->chave) {
-        if (noRef->esq != NULL)
-            inserir_ABB(noRef->esq, elemento);
+    if (element < reference_node->key) {
+        if (reference_node->left != NULL)
+            insertBst(reference_node->left, element);
         else
-            noRef->esq = criar_No(elemento, NULL, NULL);
+            reference_node->left = createNode(element, NULL, NULL);
     }
     else {
-        if (noRef->dir != NULL)
-            inserir_ABB(noRef->dir, elemento);
+        if (reference_node->right != NULL)
+            insertBst(reference_node->right, element);
         else
-            noRef->dir = criar_No(elemento, NULL, NULL);
+            reference_node->right = createNode(element, NULL, NULL);
     }
 }
 
-int altura_ABB (tipoNo *noRef) {
+int heightBst (Node *reference_node) {
 
-    if (noRef == NULL)
+    if (reference_node == NULL)
         return -1;
     else {
-        int SIZE_SAE = altura_ABB(noRef->esq);
-        int SIZE_SAD = altura_ABB(noRef->dir);
-        if (SIZE_SAE < SIZE_SAD)
-            return SIZE_SAD + 1;
+        int left_subtree_size = heightBst(reference_node->left);
+        int right_subtree_size = heightBst(reference_node->right);
+
+        if (left_subtree_size < right_subtree_size)
+            return right_subtree_size + 1;
         else
-            return SIZE_SAE + 1;
+            return left_subtree_size + 1;
     }
 }
 
-int FB (tipoNo *noRef) {
-    int ALT_SAE = 0;
-    int ALT_SAD = 0;
-    int FATOR;
+int balancingFactor(Node *reference_node) {
+    int left_subtree_height = 0;
+    int right_subtree_height = 0;
+    int factor;
 
-    if (noRef == NULL)
+    if (reference_node == NULL)
         return 0;
 
-    ALT_SAE = altura_ABB(noRef->esq);
-    ALT_SAD = altura_ABB(noRef->dir);
+    left_subtree_height = heightBst(reference_node->left);
+    right_subtree_height = heightBst(reference_node->right);
 
-    FATOR = ALT_SAE - ALT_SAD;
+    factor = left_subtree_height - right_subtree_height;
 
-    return FATOR;
+    return factor;
 }
 
-void BalancaNo (tipoNo *noRef) {
-    int balancaA, balancaB, balancaC;
+void balanceNode (Node *reference_node) {
+    int balance_a, balance_b, balance_c;
 
-    balancaA = FB(noRef);
-    balancaB = FB(noRef->esq);
-    balancaC = FB(noRef->dir);
+    balance_a = balancingFactor(reference_node);
+    balance_b = balancingFactor(reference_node->left);
+    balance_c = balancingFactor(reference_node->right);
 
-    if (balancaA < -1) {
-        if (balancaC < 0) {
-            tipoRotacao = "RR";
-            RR(noRef);
+    if (balance_a < -1) {
+        if (balance_c < 0) {
+            type_of_rotation = "RR";
+            RR(reference_node);
         }
-        else if (balancaC > 0) {
-            tipoRotacao = "RL";
-            RL(noRef);
+        else if (balance_c > 0) {
+            type_of_rotation = "RL";
+            RL(reference_node);
         }
-    } else if (balancaA > 1){
-        if (balancaB > 0) {
-            tipoRotacao = "LL";
-            LL(noRef);
+    } else if (balance_a > 1){
+        if (balance_b > 0) {
+            type_of_rotation = "LL";
+            LL(reference_node);
         }
-        else if (balancaB < 0) {
-            tipoRotacao = "LR";
-            LR(noRef);
+        else if (balance_b < 0) {
+            type_of_rotation = "LR";
+            LR(reference_node);
         }
     }
 }
 
-void LL (tipoNo *noRef) {
-    int ALT_ABB;
+//left left rotation
+void LL(Node *reference_node) {
+    int height_bst;
 
-    tipoNo *pA = noRef;
-    tipoNo *pB = pA->esq;
-    pA->esq = pB->dir;
-    pB->dir = pA;
+    Node *node_pa = reference_node;
+    Node *node_pb = node_pa->left;
+    node_pa->left = node_pb->right;
+    node_pb->right = node_pa;
 
-    ALT_ABB = altura_ABB(pB);
+    height_bst = heightBst(node_pb);
 
-    cout << tipoRotacao << endl;
-    cout << ALT_ABB << endl;
-    Imprimir(pB);
+    cout << type_of_rotation << endl;
+    cout << height_bst << endl;
+    printTreeRepresentation(node_pb);
 }
 
-void LR (tipoNo *noRef) {
-    int ALT_ABB;
+//left right rotation
+void LR(Node *reference_node) {
+    int height_bst;
 
-    tipoNo *pA = noRef;
-    tipoNo *pB = pA->esq;
-    tipoNo *pC = pB->dir;
-    pB->dir = pC->esq;
-    pC->esq = pB;
-    pA->esq = pC->dir;
-    pC->dir = pA;
+    Node *node_pa = reference_node;
+    Node *node_pb = node_pa->left;
+    Node *node_pc = node_pb->right;
+    node_pb->right = node_pc->left;
+    node_pc->left = node_pb;
+    node_pa->left = node_pc->right;
+    node_pc->right = node_pa;
 
-    ALT_ABB = altura_ABB(pC);
+    height_bst = heightBst(node_pc);
 
-    cout << tipoRotacao << endl;
-    cout << ALT_ABB << endl;
-    Imprimir(pC);
+    cout << type_of_rotation << endl;
+    cout << height_bst << endl;
+    printTreeRepresentation(node_pc);
 }
 
-void RR (tipoNo *noRef) {
-    int ALT_ABB;
+//right right rotation
+void RR(Node *reference_node) {
+    int height_bst;
 
-    tipoNo *pA;
-    tipoNo *pB;
-    pA = noRef;
-    pB = pA->dir;
-    pA->dir = pB->esq;
-    pB->esq = pA;
+    Node *node_pa;
+    Node *node_pb;
+    node_pa = reference_node;
+    node_pb = node_pa->right;
+    node_pa->right = node_pb->left;
+    node_pb->left = node_pa;
 
-    ALT_ABB = altura_ABB(pB);
+    height_bst = heightBst(node_pb);
 
-    cout << tipoRotacao << endl;
-    cout << ALT_ABB << endl;
-    Imprimir(pB);
+    cout << type_of_rotation << endl;
+    cout << height_bst << endl;
+    printTreeRepresentation(node_pb);
 }
 
-void RL (tipoNo *noRef) {
-    int ALT_ABB;
+//right left rotation
+void RL(Node *reference_node) {
+    int height_bst;
 
-    tipoNo *pA = noRef;
-    tipoNo *pB = pA->dir;
-    tipoNo *pC = pB->esq;
-    pB->esq = pC->dir;
-    pC->dir = pB;
-    pA->dir = pC->esq;
-    pC->esq = pA;
+    Node *node_pa = reference_node;
+    Node *node_pb = node_pa->right;
+    Node *node_pc = node_pb->left;
+    node_pb->left = node_pc->right;
+    node_pc->right = node_pb;
+    node_pa->right = node_pc->left;
+    node_pc->left = node_pa;
 
-    ALT_ABB = altura_ABB(pC);
+    height_bst = heightBst(node_pc);
 
-    cout << tipoRotacao << endl;
-    cout << ALT_ABB << endl;
-    Imprimir(pC);
+    cout << type_of_rotation << endl;
+    cout << height_bst << endl;
+    printTreeRepresentation(node_pc);
 }
 
-bool ArvoreAVL (tipoNo *noRef) {
-    int BALANCA;
+bool avlTree(Node *reference_node) {
+    int balance;
 
-    BALANCA = FB(noRef);
+    balance = balancingFactor(reference_node);
 
-    if (noRef->esq == NULL && noRef->dir == NULL)
+    if (reference_node->left == NULL && reference_node->right == NULL)
         return true;
-    if (BALANCA <= 1)
+    if (balance <= 1)
         return true;
 
     return false;
 }
 
-void Imprimir(tipoNo *noRef)
-{
-    if (noRef != NULL) {
-        cout << "(C" << noRef->chave;
-        Imprimir(noRef->esq);
-        Imprimir(noRef->dir);
+void printTreeRepresentation(Node *reference_node) {
+    if (reference_node != NULL) {
+        cout << "(C" << reference_node->key;
+        printTreeRepresentation(reference_node->left);
+        printTreeRepresentation(reference_node->right);
         cout << ")";
     }
     else

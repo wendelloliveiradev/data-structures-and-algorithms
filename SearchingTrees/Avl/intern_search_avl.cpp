@@ -3,315 +3,287 @@
 using namespace std;
 
 //Structs
-struct tipoNo {
-    int fb;
-    int chave;
-    struct tipoNo *esq;
-    struct tipoNo *dir;
+struct Node {
+    int balancing_factor;
+    int key;
+    struct Node *left;
+    struct Node *right;
 };
 
-struct tipoABB {
-    tipoNo *raiz;
+struct Bst {
+    Node *root;
 };
 
-//Protótipos das Funções
-void inicializar_ABB (tipoABB *arvore);
-tipoNo *criar_No (int elemento, tipoNo *esq, tipoNo *dir);
-void fbPorNo (tipoNo *&noRef);
-void buscar (tipoNo *noRef, int elemento);
-void inserir_ABB (tipoNo *&noRef, int elemento);
-void buscar_inserir (tipoNo *&noRef, int elemento);
-void buscar_remover (tipoNo *&noRef, int elemento);
-void remover_AVL (tipoNo *&noRef);
-void buscar_Menor (tipoNo *&noRef, tipoNo *&prox);
-void buscar_Maior (tipoNo *&noRef, tipoNo *&prox);
-int altura_ABB (tipoNo *noRef);
-int FB (tipoNo *noRef);
-void checaBalanceamento (tipoNo *&noRef);
-void BalancaNo (tipoNo *&noRef);
-void Imprimir(tipoNo *noRef);
-
-bool TEM = false;
+//Function Prototypes
+void initializeBst(Bst *tree);
+Node *createNode(int element, Node *left, Node *right);
+void balancingFactorPerNode(Node *&reference_node);
+bool searchElement(Node *reference_node, int element);
+void searchAndInsert(Node *&reference_node, int element);
+void searchAndRemove(Node *&reference_node, int element);
+void removeAvl(Node *&reference_node);
+void searchSmallest(Node *&reference_node, Node *&next);
+void searchBiggest(Node *&reference_node, Node *&next);
+int bstHeight(Node *reference_node);
+int balancingFactor(Node *reference_node);
+void balancingCheck(Node *&reference_node);
+void balanceNode(Node *&reference_node);
+void printAvl(Node *reference_node);
 
 int main() {
-    tipoABB *arvore = new tipoABB;  //alocação dinâmica da árvore
-    int num, elemento;
+    Bst *tree = new Bst;
+    int number, element;
+    bool has_element = false;
 
-    inicializar_ABB(arvore);   //Inicializa a arvore
+    initializeBst(tree);
 
-    cin >> num; //Pega o número de elementos a serem inseridos na AVL
+    cin >> number;
 
-    for (int i = 0; i < num; ++i) {  //Insere elementos na AVL
-        cin >> elemento;
+    for (int i = 0; i < number; ++i) {  
+        //insert elements in the AVL
+        cin >> element;
 
-        if (arvore->raiz == NULL)
-            arvore->raiz = criar_No(elemento, NULL, NULL);
+        if (tree->root == NULL)
+            tree->root = createNode(element, NULL, NULL);
         else
-            inserir_ABB(arvore->raiz, elemento);
+            searchAndInsert(tree->root, element);
     }
 
-    num = 0;
-    cin >> num;  //Pega número a ser inserido ou removido da AVL
+    number = 0;
+    cin >> number;
 
-    TEM = false;
-    buscar(arvore->raiz, num);  //Checa se o número já está na AVL
+    has_element = searchElement(tree->root, number);
 
-    if (TEM) {  //Se sim, Remove e refatora os FB's
-        buscar_remover(arvore->raiz, num);
-        fbPorNo(arvore->raiz);
-        checaBalanceamento(arvore->raiz);
+    if (has_element) {  
+        //case the element already is in the tree,
+        //remove it, and rebalance the tree
+        searchAndRemove(tree->root, number);
+        balancingFactorPerNode(tree->root);
+        balancingCheck(tree->root);
     }
-    else {  //Se não, Insere e refatora os FB's
-        buscar_inserir(arvore->raiz, num);
-        fbPorNo(arvore->raiz);
-        checaBalanceamento(arvore->raiz);
+    else {  
+        //case not in the tree, insert it and
+        //rebalance the tree
+        searchAndInsert(tree->root, number);
+        balancingFactorPerNode(tree->root);
+        balancingCheck(tree->root);
     }
 
-    Imprimir(arvore->raiz); //Imprime o resultado final
+    printAvl(tree->root);
 
-    delete arvore;
+    delete tree;
     return 0;
 }
 
-void inicializar_ABB (tipoABB *arvore) {
-    arvore->raiz = NULL;
+void initializeBst (Bst *tree) {
+    tree->root = NULL;
 }
 
-tipoNo *criar_No (int elemento, tipoNo *esq, tipoNo *dir) {
-    tipoNo *aux = new tipoNo;
+Node *createNode (int element, Node *left, Node *right) {
+    Node *aux = new Node;
 
-    aux->fb = 0;
-    aux->chave = elemento;
-    aux->esq = esq;
-    aux->dir = dir;
+    aux->balancing_factor = 0;
+    aux->key = element;
+    aux->left = left;
+    aux->right = right;
 
     return aux;
 }
 
-void fbPorNo (tipoNo *&noRef) {
-
-    if (noRef == NULL)
+void balancingFactorPerNode (Node *&reference_node) {
+    if (reference_node == NULL)
         return;
     else {
-        noRef->fb = FB(noRef);  //FB é dado pela Altura da SubArvore Esquerda - Altura da SubArvore Direita
-        fbPorNo(noRef->esq);
-        fbPorNo(noRef->dir);
+        reference_node->balancing_factor = balancingFactor(reference_node);
+        balancingFactorPerNode(reference_node->left);
+        balancingFactorPerNode(reference_node->right);
     }
 }
 
-void buscar (tipoNo *noRef, int elemento) {
+int balancingFactor (Node *reference_node) {
+    int left_subtree_height = 0;
+    int right_subtree_height = 0;
+    int factor;
 
-    if (noRef == NULL) {
-        TEM = false;
-        return;
-    }
-    if (noRef->chave == elemento) {  //Caso elemento esteja na AVL a variável global 'TEM' recebe 'true'
-        TEM = true;
-        return;
-    }
-    else if (noRef->chave < elemento)
-        buscar(noRef->dir, elemento);
-    else
-        buscar(noRef->esq, elemento);
-
-}
-
-void inserir_ABB (tipoNo *&noRef, int elemento) {
-
-    if (noRef == NULL)
-        noRef = criar_No(elemento, NULL, NULL);
-
-    if (elemento < noRef->chave) {
-
-        if (noRef->esq != NULL)
-            inserir_ABB(noRef->esq, elemento);
-        else
-            noRef->esq = criar_No(elemento, NULL, NULL);
-    }
-    else if (elemento > noRef->chave) {
-
-        if (noRef->dir != NULL)
-            inserir_ABB(noRef->dir, elemento);
-        else
-            noRef->dir = criar_No(elemento, NULL, NULL);
-    }
-
-    noRef->fb = FB(noRef);
-    checaBalanceamento(noRef);
-}
-
-void buscar_inserir (tipoNo *&noRef, int elemento) {
-
-    if (noRef == NULL)
-        noRef = criar_No(elemento, NULL, NULL);
-
-    else if (noRef->chave < elemento) {
-        if (noRef->dir != NULL)
-            buscar_inserir(noRef->dir, elemento);
-        else
-            noRef->dir = criar_No(elemento, NULL, NULL);
-    } else {
-        if (noRef->esq != NULL)
-            buscar_inserir(noRef->esq, elemento);
-        else
-            noRef->esq = criar_No(elemento, NULL, NULL);
-    }
-
-    noRef->fb = FB(noRef);
-    checaBalanceamento(noRef);
-}
-
-void buscar_remover (tipoNo *&noRef, int elemento) {
-
-    if (noRef == NULL)
-        return;
-
-    if (noRef->chave == elemento) {
-        remover_AVL(noRef);
-        if (noRef != NULL) {
-            noRef->fb = FB(noRef);
-            checaBalanceamento(noRef);
-        }
-        return;
-    }
-    else if (noRef->chave < elemento)
-        buscar_remover(noRef->dir, elemento);
-    else
-        buscar_remover(noRef->esq, elemento);
-
-    noRef->fb = FB(noRef);
-    checaBalanceamento(noRef);
-}
-
-void remover_AVL (tipoNo *&noRef) {
-
-    if (noRef == NULL)
-        return;
-
-    if (noRef->esq == NULL && noRef->dir == NULL) {
-        noRef = noRef->esq;
-        delete noRef;
-        return;
-    }
-    else if (noRef->esq != NULL && noRef->dir == NULL) {
-        buscar_Maior(noRef, noRef->esq);
-        return;
-    }
-    else {
-        buscar_Menor(noRef, noRef->dir);
-        return;
-    }
-}
-
-void buscar_Menor (tipoNo *&noRef, tipoNo *&prox) {  //Busca o menor valor da SubArvore Direita
-
-    if (prox->esq == NULL) {
-        noRef->chave = prox->chave;
-        prox = prox->dir;
-    } else
-        buscar_Menor(noRef, prox->esq);
-}
-
-void buscar_Maior (tipoNo *&noRef, tipoNo *&prox) {  //Busca o maior valor da SubArvore Esquerda
-
-    if (prox->dir == NULL) {
-        noRef->chave = prox->chave;
-        prox = prox->esq;
-    } else
-        buscar_Maior(noRef, prox->dir);
-}
-
-int altura_ABB (tipoNo *noRef) {  //Retorna a Altura de um determinado Nó
-
-    if (noRef == NULL)
-        return -1;
-    else {
-        int SIZE_SAE = altura_ABB(noRef->esq);
-        int SIZE_SAD = altura_ABB(noRef->dir);
-        if (SIZE_SAE < SIZE_SAD)
-            return SIZE_SAD + 1;
-        else
-            return SIZE_SAE + 1;
-    }
-}
-
-int FB (tipoNo *noRef) {  //Retorna o Fator de Balanceamento de um dado Nó
-    int ALT_SAE = 0;
-    int ALT_SAD = 0;
-    int FATOR;
-
-    if (noRef == NULL)
+    if (reference_node == NULL)
         return 0;
 
-    ALT_SAE = altura_ABB(noRef->esq);
-    ALT_SAD = altura_ABB(noRef->dir);
+    left_subtree_height = bstHeight(reference_node->left);
+    right_subtree_height = bstHeight(reference_node->right);
 
-    FATOR = ALT_SAE - ALT_SAD;
+    factor = left_subtree_height - right_subtree_height;
 
-    return FATOR;
+    return factor;
 }
-void checaBalanceamento (tipoNo *&noRef) {
 
-    if (noRef == NULL)
+bool searchElement(Node *reference_node, int element) {
+    bool ret;
+
+    if (reference_node == NULL)
+        return false;
+    
+    if (reference_node->key == element)
+        return true;
+    
+    else if (reference_node->key < element) {
+        ret = searchElement(reference_node->right, element);
+        return ret;
+    }
+    else {
+        ret = searchElement(reference_node->left, element);
+        return ret;
+    }
+
+    return ret;
+}
+
+void searchAndInsert (Node *&reference_node, int element) {
+    if (reference_node == NULL)
+        reference_node = createNode(element, NULL, NULL);
+
+    else if (reference_node->key < element) {
+        if (reference_node->right != NULL)
+            searchAndInsert(reference_node->right, element);
+        else
+            reference_node->right = createNode(element, NULL, NULL);
+    } else {
+        if (reference_node->left != NULL)
+            searchAndInsert(reference_node->left, element);
+        else
+            reference_node->left = createNode(element, NULL, NULL);
+    }
+
+    reference_node->balancing_factor = balancingFactor(reference_node);
+    balancingCheck(reference_node);
+}
+
+void searchAndRemove (Node *&reference_node, int element) {
+    if (reference_node == NULL)
         return;
-    else if (noRef->fb > 1 || noRef->fb < -1) {  //Se a AVL precisa ser balanceada chama BalancaNo e refatora os FB's
-        BalancaNo(noRef);
-        fbPorNo(noRef);
-    }
 
-    //Percorrimento recursivo da AVL
-    checaBalanceamento(noRef->esq);
-    checaBalanceamento(noRef->dir);
+    if (reference_node->key == element) {
+        removeAvl(reference_node);
+        if (reference_node != NULL) {
+            reference_node->balancing_factor = balancingFactor(reference_node);
+            balancingCheck(reference_node);
+        }
+        return;
+    }
+    else if (reference_node->key < element)
+        searchAndRemove(reference_node->right, element);
+    else
+        searchAndRemove(reference_node->left, element);
+
+    reference_node->balancing_factor = balancingFactor(reference_node);
+    balancingCheck(reference_node);
 }
 
-void BalancaNo (tipoNo *&noRef) {   //Aplica a rotaçao adequada, onde necessario
+void removeAvl(Node *&reference_node) {
+    if (reference_node == NULL)
+        return;
 
+    if (reference_node->left == NULL && reference_node->right == NULL) {
+        reference_node = reference_node->left;
+        delete reference_node;
+    }
+    else if (reference_node->left != NULL && reference_node->right == NULL)
+        searchBiggest(reference_node, reference_node->left);
+    else
+        searchSmallest(reference_node, reference_node->right);
+}
 
-    if (noRef->fb < -1) {
-        if (noRef->dir->fb < 0) {  //Rotação do tipo RR (rotaçao simples a esquerda)
-            tipoNo *pA = noRef;
-            tipoNo *pB = pA->dir;
-            pA->dir = pB->esq;
-            pB->esq = pA;
-            noRef = pB;
+void searchSmallest(Node *&reference_node, Node *&next) {
+    if (next->left == NULL) {
+        reference_node->key = next->key;
+        next = next->right;
+    } else
+        searchSmallest(reference_node, next->left);
+}
+
+void searchBiggest(Node *&reference_node, Node *&next) {
+    if (next->right == NULL) {
+        reference_node->key = next->key;
+        next = next->left;
+    } else
+        searchBiggest(reference_node, next->right);
+}
+
+int bstHeight(Node *reference_node) {
+    if (reference_node == NULL)
+        return -1;
+    else {
+        int left_subtree_height = bstHeight(reference_node->left);
+        int right_subtree_height = bstHeight(reference_node->right);
+        if (left_subtree_height < right_subtree_height)
+            return right_subtree_height + 1;
+        else
+            return left_subtree_height + 1;
+    }
+}
+
+void balancingCheck(Node *&reference_node) {
+    if (reference_node == NULL)
+        return;
+    else if (reference_node->balancing_factor > 1 || reference_node->balancing_factor < -1) {
+        balanceNode(reference_node);
+        balancingFactorPerNode(reference_node);
+    }
+
+    //recursive calls of AVL
+    balancingCheck(reference_node->left);
+    balancingCheck(reference_node->right);
+}
+
+void balanceNode(Node *&reference_node) {   
+    //Balance where it's needed
+    if (reference_node->balancing_factor < -1) {
+        if (reference_node->right->balancing_factor < 0) {  
+            //rotation type RR (simple left rotation)
+            Node *node_pa = reference_node;
+            Node *node_pb = node_pa->right;
+            node_pa->right = node_pb->left;
+            node_pb->left = node_pa;
+            reference_node = node_pb;
         }
-        else if (noRef->dir->fb > 0) {   //Rotação do tipo RL (rotaçao dupla a esquerda)
-            tipoNo *pA = noRef;
-            tipoNo *pB = pA->dir;
-            tipoNo *pC = pB->esq;
-            pB->esq = pC->dir;
-            pC->dir = pB;
-            pA->dir = pC->esq;
-            pC->esq = pA;
-            noRef = pC;
+        else if (reference_node->right->balancing_factor > 0) {   
+            //rotation type RL (double left rotation)
+            Node *node_pa = reference_node;
+            Node *node_pb = node_pa->right;
+            Node *node_pc = node_pb->left;
+            node_pb->left = node_pc->right;
+            node_pc->right = node_pb;
+            node_pa->right = node_pc->left;
+            node_pc->left = node_pa;
+            reference_node = node_pc;
         }
-    } else if (noRef->fb > 1){
-        if (noRef->esq->fb > 0) {   //Rotação do tipo LL (rotaçao simples a direita)
-            tipoNo *pA = noRef;
-            tipoNo *pB = pA->esq;
-            pA->esq = pB->dir;
-            pB->dir = pA;
-            noRef = pB;
+    } else if (reference_node->balancing_factor > 1){
+        if (reference_node->left->balancing_factor > 0) {   
+            //rotation type LL (simple right rotation)
+            Node *node_pa = reference_node;
+            Node *node_pb = node_pa->left;
+            node_pa->left = node_pb->right;
+            node_pb->right = node_pa;
+            reference_node = node_pb;
         }
-        else if (noRef->esq->fb < 0) {   //Rotação do tipo LR (rotaçao dupla a direita)
-            tipoNo *pA = noRef;
-            tipoNo *pB = pA->esq;
-            tipoNo *pC = pB->dir;
-            pB->dir = pC->esq;
-            pC->esq = pB;
-            pA->esq = pC->dir;
-            pC->dir = pA;
-            noRef = pC;
+        else if (reference_node->left->balancing_factor < 0) {   
+            //rotation type LR (double right rotation)
+            Node *node_pa = reference_node;
+            Node *node_pb = node_pa->left;
+            Node *node_pc = node_pb->right;
+            node_pb->right = node_pc->left;
+            node_pc->left = node_pb;
+            node_pa->left = node_pc->right;
+            node_pc->right = node_pa;
+            reference_node = node_pc;
         }
     }
 }
 
-void Imprimir(tipoNo *noRef)
-{
-    if (noRef != NULL) {
-        cout << "(C" << noRef->chave;
-        Imprimir(noRef->esq);
-        Imprimir(noRef->dir);
+void printAvl(Node *reference_node) {
+    if (reference_node != NULL) {
+        cout << "(C" << reference_node->key;
+        printAvl(reference_node->left);
+        printAvl(reference_node->right);
         cout << ")";
     }
     else
