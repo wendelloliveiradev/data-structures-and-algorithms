@@ -17,7 +17,7 @@ int main() {
 	Person* people = new Person[105000];
 	Person* aux_people = new Person[105000];
 	int N, M, P, i, is_stable = 0;
-	
+
 	cin >> N;
 
 	for (i = 0; i < N; i++) {
@@ -122,7 +122,7 @@ void swap(struct Person* people, int i, int j) {
 }
 
 int verifyStability(struct Person* people, string str1, string str2, int N) {
-	int i, is_stable = 0;
+    int i, is_stable = 0;
 
 	for (i = 0; i < N - 1; i++) {
 		if (people[i].name == str1 && is_stable == 0) 
