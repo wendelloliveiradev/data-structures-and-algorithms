@@ -2,223 +2,224 @@
 
 using namespace std;
 
-int TAM_ABB = 0;  //Variável global para contagem de elementos na ABB
-bool TEM = false;
-
 //Structs
-struct tipoNo {
-    int numero;
-    struct tipoNo *esq;
-    struct tipoNo *dir;
+struct Node {
+    int element;
+    struct Node *left;
+    struct Node *right;
 };
 
-struct tipoABB {
-    tipoNo *raiz;
+struct Bst {
+    Node *root;
+    int size_bst;
 };
 
-//Protótipos das Funções
-void inicializar_ABB (tipoABB *arvore);
-tipoNo *criar_No (int elemento, tipoNo *esq, tipoNo *dir);
-void inserir_ABB (tipoNo *noRef, int elemento);
-void buscar (tipoNo *noRef, int num);
-void pesquisar_inserir (tipoNo *noRef, int num);
-void pesquisar_remover (tipoNo *noRef, int num);
-bool remover_ABB (tipoNo *noRef);
-void buscar_Menor (tipoNo *noRef, tipoNo *prox);
-void buscar_Maior (tipoNo *noRef, tipoNo *prox);
-int altura_ABB (tipoNo *noRef);
+//Function Prototypes
+void initializeBst(Bst *tree);
+Node *createNode(int element, Node *left, Node *right);
+void insertBst(Bst *tree, Node *reference_node, int element);
+bool search(Node *reference_node, int element);
+void searchAndInsert(Bst *tree, Node *reference_node, int element);
+void searchAndRemove(Bst *tree, Node *reference_node, Node *previous_node, int element);
+void deleteFromBst(Bst *tree, Node *reference_node, Node *previous_node);
+void searchSmallestRightSubtree(Bst *tree, Node *reference_node, Node *next_node, Node *previous_node);
+void searchBiggestLeftSubtree(Bst *tree, Node *reference_node, Node *next_node, Node *previous_node);
+int heightBst(Node *reference_node);
 
 int main() {
-    auto *arvore = new tipoABB;
+    auto *tree = new Bst;
     int aux = 0;
-    int ALT_ABB = 0;
+    int height_bst = 0;
+    bool is_element_tree = false;
 
-    inicializar_ABB(arvore);   //Inicializa a arvore
+    initializeBst(tree);
 
-    while (true) {    //Recebe entradas e coloca na arvore até o -1
+    while (true) {
         cin >> aux;
         if (aux == -1)
             break;
-        if (arvore->raiz == NULL) {
-            arvore->raiz = criar_No(aux, NULL, NULL);
+        if (tree->root == nullptr) {
+            tree->root = createNode(aux, nullptr, nullptr);
+            tree->size_bst++;
         }
         else
-            inserir_ABB(arvore->raiz, aux);
+            insertBst(tree, tree->root, aux);
     }
 
-    cin >> aux;   //recebe mais um numero, e insere na arvore se não estiver, e remover se estiver
+    cin >> aux;
 
-    ALT_ABB = altura_ABB(arvore->raiz);   //Calcula altura da ABB se tiver apenas 1 elemento retorna 0
+    height_bst = heightBst(tree->root);
 
-    cout << TAM_ABB << " " << ALT_ABB + 1 << "\n";
+    cout << tree->size_bst << " " << height_bst << endl;
 
-    buscar(arvore->raiz, aux);
+    is_element_tree = search(tree->root, aux);
 
-    cout << TEM << "\n";
+    if (is_element_tree) {
+        searchAndRemove(tree, tree->root, tree->root, aux);
+    } else
+        searchAndInsert(tree, tree->root, aux);
 
-    if (TEM) {
-        pesquisar_remover(arvore->raiz, aux);
-        if (arvore->raiz->numero == -1)
-            inicializar_ABB(arvore);
-    } else {
-        pesquisar_inserir(arvore->raiz, aux);
-    }
+    height_bst = heightBst(tree->root);
 
-    ALT_ABB = altura_ABB(arvore->raiz);
-    if (TAM_ABB == 1)
-        ALT_ABB++;
-    cout << TAM_ABB << " " << ALT_ABB + 1 << "\n";
+    if (tree->size_bst == 1)
+        height_bst++;
+
+    cout << tree->size_bst << " " << height_bst << endl;
 
     return 0;
 }
 
-void inicializar_ABB (tipoABB *arvore) {
-    arvore->raiz = NULL;
+void initializeBst(Bst *tree) {
+    tree->root = nullptr;
+    tree->size_bst = 0;
 }
 
-tipoNo *criar_No (int elemento, tipoNo *esq, tipoNo *dir) {
-    auto *aux = new tipoNo;
+Node *createNode(int element, Node *left, Node *right) {
+    auto *aux = new Node;
 
-    aux->numero = elemento;
-    aux->esq = esq;
-    aux->dir = dir;
+    aux->element = element;
+    aux->left = left;
+    aux->right = right;
 
-    TAM_ABB++;
     return aux;
 }
 
-void buscar (tipoNo *noRef, int num) {
+bool search(Node *reference_node, int element) {
+    bool ret;
 
-    if (noRef == NULL) {
-        TEM = false;
-        return;
+    if (reference_node == nullptr)
+        return false;
+    if (reference_node->element == element)
+        return true;
+    else if (reference_node->element < element) {
+        ret = search(reference_node->right, element);
+        return ret;
     }
-    if (noRef->numero == num) {
-        TEM = true;
-        return;
+    else {
+        ret = search(reference_node->left, element);
+        return ret;
     }
-    else if (noRef->numero < num)
-        buscar(noRef->dir, num);
-    else
-        buscar(noRef->esq, num);
-
-    return;
 }
 
-void pesquisar_inserir (tipoNo *noRef, int num) {
-
-    if (noRef == NULL) {
-        noRef = criar_No(num, NULL, NULL);
-        return;
+void searchAndInsert(Bst *tree, Node *reference_node, int element) {
+    if (reference_node == nullptr) {
+        reference_node = createNode(element, nullptr, nullptr);
+        tree->size_bst++;
     }
-    else if (noRef->numero < num) {
-        if (noRef->dir != NULL)
-            pesquisar_inserir(noRef->dir, num);
+    else if (reference_node->element < element) {
+        if (reference_node->right != nullptr)
+            searchAndInsert(tree, reference_node->right, element);
         else {
-            noRef->dir = criar_No(num, NULL, NULL);
-            return;
+            reference_node->right = createNode(element, nullptr, nullptr);
+            tree->size_bst++;
         }
     } else {
-        if (noRef->esq != NULL)
-            pesquisar_inserir(noRef->esq, num);
+        if (reference_node->left != nullptr)
+            searchAndInsert(tree, reference_node->left, element);
         else {
-            noRef->esq = criar_No(num, NULL, NULL);
-            return;
+            reference_node->left = createNode(element, nullptr, nullptr);
+            tree->size_bst++;
         }
     }
 }
 
-void pesquisar_remover (tipoNo *noRef, int num) {
-    bool removeu = false;
-
-    if (noRef == NULL) {
-        return;
+void searchAndRemove(Bst *tree, Node *reference_node, Node *previous_node, int element) {
+    if (reference_node != nullptr) {
+        if (reference_node->element == element) {
+            if (reference_node == previous_node)
+                initializeBst(tree);
+            else
+                deleteFromBst(tree, reference_node, previous_node);
+        }
+        else if (reference_node->element < element)
+            searchAndRemove(tree, reference_node->right, reference_node, element);
+        else
+            searchAndRemove(tree, reference_node->left, reference_node, element);
     }
-
-    if (noRef->numero == num) {
-        removeu = remover_ABB(noRef);
-        if (removeu)
-            return;
-    }
-
-    else if (noRef->numero < num)
-        pesquisar_remover(noRef->dir, num);
-    else
-        pesquisar_remover(noRef->esq, num);
-
 }
 
-void inserir_ABB (tipoNo *noRef, int elemento) {
-
-    if (elemento < noRef->numero) {
-        if (noRef->esq != NULL)
-            inserir_ABB(noRef->esq, elemento);
-        else
-            noRef->esq = criar_No(elemento, NULL, NULL);
+void insertBst(Bst *tree, Node *reference_node, int element) {
+    if (element < reference_node->element) {
+        if (reference_node->left != nullptr)
+            insertBst(tree, reference_node->left, element);
+        else {
+            reference_node->left = createNode(element, nullptr, nullptr);
+            tree->size_bst++;
+        }
     }
     else {
-        if (noRef->dir != NULL)
-            inserir_ABB(noRef->dir, elemento);
+        if (reference_node->right != nullptr)
+            insertBst(tree, reference_node->right, element);
+        else {
+            reference_node->right = createNode(element, nullptr, nullptr);
+            tree->size_bst++;
+        }
+    }
+}
+
+void deleteFromBst(Bst *tree, Node *reference_node, Node *previous_node) {
+    if (reference_node != nullptr) {
+        if (reference_node->left == nullptr && reference_node->right == nullptr) {
+            if (tree->size_bst == 1)
+                initializeBst(tree);
+            else {
+                if (previous_node->left == reference_node)
+                    previous_node->left = nullptr;
+                else if (previous_node->right == reference_node)
+                    previous_node->right = nullptr;
+
+                tree->size_bst--;
+            }
+        }
+        else if (reference_node->left != nullptr && reference_node->right == nullptr)
+            searchBiggestLeftSubtree(tree, reference_node, reference_node->left, reference_node->left);
         else
-            noRef->dir = criar_No(elemento, NULL, NULL);
+            searchSmallestRightSubtree(tree, reference_node, reference_node->right, reference_node->right);
     }
 }
 
-bool remover_ABB (tipoNo *noRef) {
-
-    if (noRef == NULL)
-        return false;
-
-    if (noRef->esq == NULL && noRef->dir == NULL) {
-        noRef->numero = -1;
-        TAM_ABB--;
-        return true;
-    }
-    else if (noRef->esq != NULL && noRef->dir == NULL) {
-        buscar_Maior(noRef, noRef->esq);
-        return true;
-    }
-    else {
-        buscar_Menor(noRef, noRef->dir);
-        return true;
-    }
-}
-
-void buscar_Menor (tipoNo *noRef, tipoNo *prox) {
-
-    if (prox->esq == NULL) {
-        noRef->numero = prox->numero;
-        noRef->dir = prox->dir;
-        delete prox;
-        TAM_ABB--;
+void searchSmallestRightSubtree(Bst *tree, Node *reference_node, Node *next_node, Node *previous_node) {
+    if (next_node->left == nullptr) {
+        if (next_node == previous_node) {
+            reference_node->element = next_node->element;
+            reference_node->right = next_node->right;
+            tree->size_bst--;
+        } else {
+            reference_node->element = next_node->element;
+            reference_node->right = next_node->right;
+            previous_node->left = nullptr;
+            tree->size_bst--;
+        }
     } else
-        buscar_Menor(noRef, prox->esq);
+        searchSmallestRightSubtree(tree, reference_node, next_node->left, next_node);
 }
 
-void buscar_Maior (tipoNo *noRef, tipoNo *prox) {
-
-    if (prox->dir == NULL) {
-        noRef->numero = prox->numero;
-        noRef->esq = prox->esq;
-        delete prox;
-        TAM_ABB--;
+void searchBiggestLeftSubtree(Bst *tree, Node *reference_node, Node *next_node, Node *previous_node) {
+    if (next_node->right == nullptr) {
+        if (next_node == previous_node) {
+            reference_node->element = next_node->element;
+            reference_node->left = next_node->left;
+            tree->size_bst--;
+        } else {
+            reference_node->element = next_node->element;
+            reference_node->left = next_node->left;
+            previous_node->right = nullptr;
+            tree->size_bst--;
+        }
     } else
-        buscar_Maior(noRef, prox->dir);
+        searchBiggestLeftSubtree(tree, reference_node, next_node->right, next_node);
 }
 
-
-
-int altura_ABB (tipoNo *noRef) {
-
-
-    if (noRef == NULL)
-        return -1;
+int heightBst(Node *reference_node) {
+    if (reference_node == nullptr)
+        return 0;
     else {
-        int SIZE_SAE = altura_ABB(noRef->esq);
-        int SIZE_SAD = altura_ABB(noRef->dir);
-        if (SIZE_SAE < SIZE_SAD)
-            return SIZE_SAD + 1;
+        int left_subtree_height = heightBst(reference_node->left);
+        int right_subtree_height = heightBst(reference_node->right);
+        
+        if (left_subtree_height < right_subtree_height)
+            return right_subtree_height + 1;
         else
-            return SIZE_SAE + 1;
+            return left_subtree_height + 1;
     }
 }
