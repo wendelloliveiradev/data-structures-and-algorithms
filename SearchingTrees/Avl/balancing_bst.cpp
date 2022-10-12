@@ -69,7 +69,7 @@ int main() {
 }
 
 void initializeBst (Bst *tree) {
-    tree->root = NULL;
+    tree->root = nullptr;
 }
 
 void countingParentheses(string &str, int &num_node_parent, int &num_element) {
@@ -108,8 +108,8 @@ void entriesTreatment(Bst *tree, string &str, int &num_node_parent) {
             stringstream intValue(aux); //converting string to integer
             intValue >> number;
 
-            if (tree->root == NULL)   //adds the first element to the tree
-                tree->root = createNode(number, NULL, NULL);
+            if (tree->root == nullptr)   //adds the first element to the tree
+                tree->root = createNode(number, nullptr, nullptr);
             else {
                 if (flag_side)                    
                     insertBst(tree->root->left, number);
@@ -133,36 +133,35 @@ Node *createNode (int element, Node *left, Node *right) {
 
 void insertBst(Node *&reference_node, int element) {
 
-    if (reference_node == NULL) {
-        reference_node = createNode(element, NULL, NULL);
+    if (reference_node == nullptr) {
+        reference_node = createNode(element, nullptr, nullptr);
         return;
     }
     if (element < reference_node->key) {
-        if (reference_node->left != NULL)
+        if (reference_node->left != nullptr)
             insertBst(reference_node->left, element);
         else
-            reference_node->left = createNode(element, NULL, NULL);
+            reference_node->left = createNode(element, nullptr, nullptr);
     }
     else {
-        if (reference_node->right != NULL)
+        if (reference_node->right != nullptr)
             insertBst(reference_node->right, element);
         else
-            reference_node->right = createNode(element, NULL, NULL);
+            reference_node->right = createNode(element, nullptr, nullptr);
     }
 }
 
-int heightBst (Node *reference_node) {
-
-    if (reference_node == NULL)
+int heightBst(Node *reference_node) {
+    if (reference_node == nullptr)
         return -1;
     else {
-        int left_subtree_size = heightBst(reference_node->left);
-        int right_subtree_size = heightBst(reference_node->right);
+        int left_subtree_height = heightBst(reference_node->left);
+        int right_subtree_height = heightBst(reference_node->right);
 
-        if (left_subtree_size < right_subtree_size)
-            return right_subtree_size + 1;
+        if (left_subtree_height < right_subtree_height)
+            return right_subtree_height + 1;
         else
-            return left_subtree_size + 1;
+            return left_subtree_height + 1;
     }
 }
 
@@ -171,7 +170,7 @@ int balancingFactor(Node *reference_node) {
     int right_subtree_height = 0;
     int factor;
 
-    if (reference_node == NULL)
+    if (reference_node == nullptr)
         return 0;
 
     left_subtree_height = heightBst(reference_node->left);
@@ -210,7 +209,7 @@ void balanceNode (Node *reference_node) {
     }
 }
 
-//left left rotation
+//rotation type LL (simple right rotation)
 void LL(Node *reference_node) {
     int height_bst;
 
@@ -226,7 +225,7 @@ void LL(Node *reference_node) {
     printTreeRepresentation(node_pb);
 }
 
-//left right rotation
+//rotation type LR (double right rotation)
 void LR(Node *reference_node) {
     int height_bst;
 
@@ -245,7 +244,7 @@ void LR(Node *reference_node) {
     printTreeRepresentation(node_pc);
 }
 
-//right right rotation
+//rotation type RR (simple left rotation)
 void RR(Node *reference_node) {
     int height_bst;
 
@@ -263,7 +262,7 @@ void RR(Node *reference_node) {
     printTreeRepresentation(node_pb);
 }
 
-//right left rotation
+//rotation type RL (double left rotation)
 void RL(Node *reference_node) {
     int height_bst;
 
@@ -287,7 +286,7 @@ bool avlTree(Node *reference_node) {
 
     balance = balancingFactor(reference_node);
 
-    if (reference_node->left == NULL && reference_node->right == NULL)
+    if (reference_node->left == nullptr && reference_node->right == nullptr)
         return true;
     if (balance <= 1)
         return true;
@@ -296,7 +295,7 @@ bool avlTree(Node *reference_node) {
 }
 
 void printTreeRepresentation(Node *reference_node) {
-    if (reference_node != NULL) {
+    if (reference_node != nullptr) {
         cout << "(C" << reference_node->key;
         printTreeRepresentation(reference_node->left);
         printTreeRepresentation(reference_node->right);
